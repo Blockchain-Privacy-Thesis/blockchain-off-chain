@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS "input_data" ("id" SERIAL, "input_text" VARCHAR(1000) NOT NULL, PRIMARY KEY ("id"))

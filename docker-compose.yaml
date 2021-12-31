@@ -1,0 +1,137 @@
+version: "2.0"
+
+services:
+#  # Container for database
+#  sawtooth-off-chain:
+#    # Official Postgres image from DockerHub (we use the last version)
+#    image: "postgres:latest"
+#    restart: always
+#    container_name: sawtooth-off-chain
+#    # By default, a Postgres database is running on the 5432 port.
+#    # If we want to access the database from our computer (outside the container),
+#    # we must share the port with our computer's port.
+#    ports:
+#      - 5432:5432
+#    environment:
+#      POSTGRES_USER: username # The PostgreSQL user (useful to connect to the database)
+#      POSTGRES_PASSWORD: password # The PostgreSQL password (useful to connect to the database)
+#      POSTGRES_DB: default_database # The PostgreSQL default database (automatically created at first launch)
+#    volumes:
+#      - ./sawtooth-off-chain/init.sql:/docker-entrypoint-initdb.d/init.sql
+#    #build:
+#    #  context: .
+#    #  dockerfile: sawtooth-off-chain/DockerFile
+#
+#  # Container for the client application at port 3000
+#  sawtooth-privacy-client:
+#    container_name: sawtooth-privacy-client
+#    expose:
+#      - 3000
+#    ports:
+#      - 3000:3000
+#    build:
+#      context: .
+#      dockerfile: sawtooth-privacy-client/DockerFile
+#    volumes:
+#      - ".:/project/sawtooth-privacy"
+#    # Setting up links and environment for connecting to the PostgreSQL database
+#    links:
+#      - "sawtooth-off-chain:sawtooth-off-chain"
+#    # environment:
+#    #  - PGPASSWORD=password
+#    #  - PGUSER=username
+#    #  - PGDATABASE=default_database
+#    #  - PGHOST=sawtooth-off-chain
+#    #  - PGPORT=5432
+#    depends_on:
+#      - sawtooth-off-chain
+#    #  - zk-api
+#
+#  # Container for the transaction processor
+#  sawtooth-privacy-processor:
+#    container_name: sawtooth-privacy-processor
+#    build:
+#      context: .
+#      dockerfile: sawtooth-privacy-processor/DockerFile
+#    depends_on:
+#      - validator
+#    volumes:
+#      - ".:/project/sawtooth-privacy"
+#
+#  # Container for Sawtooth REST API, used for the communication between the client and validator
+#  sawtooth-rest-api:
+#    image: hyperledger/sawtooth-rest-api:chime
+#    container_name: rest-api
+#    expose:
+#      - 8008
+#    ports:
+#      - "8008:8008"
+#    depends_on:
+#      - validator
+#    entrypoint: sawtooth-rest-api -vv -C tcp://validator:4004 --bind rest-api:8008
+#
+#  #container for 'settings-tp', a required transaction processor for all Sawtooth applications, which handles the on-chain configurations
+#  settings-tp:
+#    image: hyperledger/sawtooth-settings-tp:chime
+#    depends_on:
+#      - validator
+#    entrypoint: settings-tp -vv -C tcp://validator:4004
+#
+#  # Container for a validator in a Sawtooth network.
+#  validator:
+#    image: hyperledger/sawtooth-validator:chime
+#    container_name: validator
+#    expose:
+#      - 4004
+#    ports:
+#      - "4004:4004"
+#    entrypoint: "bash -c \"\
+#      sawadm keygen && \
+#      sawtooth keygen my_key && \
+#      sawset genesis -k /root/.sawtooth/keys/my_key.priv && \
+#      sawset proposal create \
+#      -k /root/.sawtooth/keys/my_key.priv \
+#      sawtooth.consensus.algorithm.name=Devmode \
+#      sawtooth.consensus.algorithm.version=0.1 \
+#      -o config.batch && \
+#      sawadm genesis config-genesis.batch config.batch && \
+#      sawtooth-validator -vv \
+#      --endpoint tcp://validator:8800 \
+#      --bind component:tcp://eth0:4004 \
+#      --bind network:tcp://eth0:8800 \
+#      --bind consensus:tcp://eth0:5050 \
+#      \""
+#
+#  # Default consensus engine for development purposes
+#  devmode-engine:
+#    image: hyperledger/sawtooth-devmode-engine-rust:chime
+#    container_name: sawtooth-devmode-engine-rust-default
+#    ports:
+#      - "5050:5050"
+#    depends_on:
+#      - validator
+#    entrypoint: devmode-engine-rust -C tcp://validator:5050
+#
+  # Database for the zkSNARK api
+  zk-db:
+    image: "postgres:9.6"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./db/db.sql:/docker-entrypoint-initdb.d/01_db.sql
+      - ./db/data.sql:/docker-entrypoint-initdb.d/02_data.sql
+    environment:
+      POSTGRES_DB: rust
+      POSTGRES_PASSWORD: docker
+      POSTGRES_USER: docker
+
+  # Container for the zkSNARK api
+  zk-api:
+    command: sleep 999
+    build:
+      context: .
+      dockerfile: zksnark/Dockerfile
+    ports:
+     - "3001:3000"
+    links:
+      - "zk-db:zk-db"

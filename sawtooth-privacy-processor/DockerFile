@@ -1,0 +1,34 @@
+
+FROM ubuntu:bionic
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN \
+ apt-get update && apt-get install -y gnupg2 \
+ && echo "deb http://repo.sawtooth.me/ubuntu/nightly bionic universe" >> /etc/apt/sources.list  \
+ && (apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 44FC67F19B2466EA \
+ || apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 44FC67F19B2466EA) \
+ && apt-get update \
+ && apt-get install -y -q --no-install-recommends \
+    apt-utils \
+ && apt-get install -y -q \
+    build-essential \
+    apt-transport-https \
+    ca-certificates \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+#RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+#    && apt-get install nodejs
+
+RUN apt-get update; \
+    apt-get install -y curl gnupg; \
+    curl -sL https://deb.nodesource.com/setup_12.x | bash -; \
+    apt-get install -y nodejs; \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project/sawtooth-privacy/sawtooth-privacy-processor
+
+CMD npm install && npm start
+
+EXPOSE 4004/tcp
